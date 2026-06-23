@@ -31,4 +31,22 @@ def log_interaction(question: str, tier: str, response: str) -> None:
 
     Design your log entry in specs/auditor-spec.md before implementing here.
     """
-    pass
+    from datetime import timezone
+
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    record = {
+        "timestamp": timestamp,
+        "tier": tier,
+        "question": question[:300],
+        "question_length": len(question),
+        "response_preview": response[:200],
+        "response_length": len(response),
+    }
+
+    with open(LOG_FILE, "a") as f:
+        f.write(json.dumps(record) + "\n")
+
+    print(f"[{timestamp}] [LOGGED] {tier} | {question[:80]} | {response[:50]}...")

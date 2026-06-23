@@ -43,8 +43,8 @@ Record every interaction — question, safety tier, and response preview — to 
 | `"tier"` | `str` | Safety tier assigned to this question |
 | `"question"` | `str` | The user's question, truncated to 300 characters |
 | `"response_preview"` | `str` | First 200 characters of the generated response |
-| `[your field]` | `[type]` | [description] |
-| `[your field]` | `[type]` | [description] |
+| `"question_length"` | `int` | Character count of the original question before truncation — lets you tell when the 300-char limit cut something off |
+| `"response_length"` | `int` | Character count of the full response — useful for spotting truncated or empty responses without storing the full text |
 
 ---
 
@@ -53,7 +53,7 @@ Record every interaction — question, safety tier, and response preview — to 
 *The required fields truncate the question to 300 characters and the response to 200. Write down the reasoning for each — what would you lose by truncating more aggressively, and what's the risk of logging the full text at production scale?*
 
 ```
-[your answer here]
+The question is truncated to 300 characters because most home repair questions are short — 300 characters captures enough context to identify the topic and spot misclassifications without storing full user input at scale. Truncating more aggressively risks losing the specific wording that caused a wrong classification, which is exactly what you need when diagnosing a pattern across hundreds of entries. The response is truncated to 200 characters because full responses can run several hundred words — at 10,000 questions per day, storing full response text would make the log file very large very quickly, and a preview is sufficient to confirm whether the response matched the tier. JSONL logs are processed line by line, so keeping each record compact is important for memory efficiency at scale.
 ```
 
 ---
@@ -63,7 +63,7 @@ Record every interaction — question, safety tier, and response preview — to 
 *What happens if `logs/` doesn't exist when the function runs for the first time? How will you handle that — and why is this worth thinking about at all?*
 
 ```
-[your answer here]
+The function will call os.makedirs("logs", exist_ok=True) before opening the log file. Without this, the first run would raise a FileNotFoundError and crash silently — the interaction would complete but nothing would be logged, which defeats the accountability purpose of the audit log. exist_ok=True makes the call a no-op on subsequent runs, so it's safe to call every time without checking first.
 ```
 
 ---
@@ -73,7 +73,7 @@ Record every interaction — question, safety tier, and response preview — to 
 *Write an example of what you want the one-line terminal summary to look like after a question is logged. Be specific about format.*
 
 ```
-[your example output here]
+[2025-11-01T14:22:01Z] [LOGGED] safe | How do I patch a small hole in drywall? | Patching small drywall holes is routine...
 ```
 
 ---
